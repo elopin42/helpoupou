@@ -30,6 +30,34 @@ _menu_notify() {
   esac
 }
 
+_menu_access() {
+  local -a items
+  if [ "$MODE" = prod ]; then
+    items=("Show SSH status" "Harden SSH (keys only, no passwords)" "Confirm the hardening" "Back")
+    ui_select "Access to this server" "${items[@]}" || return 0
+    case "$UI_CHOICE" in
+      0) ssh_status ;;
+      1) ssh_harden ;;
+      2) ssh_confirm ;;
+    esac
+  else
+    local target=''
+    items=("Register a security key (YubiKey...)" "Import the keys stored on a security key"
+      "List my security keys" "Install my keys on a server" "Use my keys for GitHub" "Back")
+    ui_select "Security keys" "${items[@]}" || return 0
+    case "$UI_CHOICE" in
+      0) key_setup ;;
+      1) key_import ;;
+      2) key_list ;;
+      3)
+        ask target "Server (user@host)"
+        key_push "$target"
+        ;;
+      4) key_github ;;
+    esac
+  fi
+}
+
 _menu_pick_project() {
   local -a dirs=() items=()
   local d
@@ -37,7 +65,8 @@ _menu_pick_project() {
     dirs+=("$d")
     items+=("$(basename "$d")  ($d)")
   done < <(registry_list)
-  items+=("Check this machine (doctor)" "Notifications" "Set up the project in this directory (init)" "Quit")
+  items+=("Check this machine (doctor)" "Notifications" "Security keys and SSH access"
+    "Set up the project in this directory (init)" "Quit")
   local n=${#dirs[@]}
   ui_select "helpoupou - no project here. Pick one:" "${items[@]}" || exit 0
   if [ "$UI_CHOICE" -lt "$n" ]; then
@@ -47,7 +76,8 @@ _menu_pick_project() {
   case $((UI_CHOICE - n)) in
     0) _menu_run doctor_run ;;
     1) _menu_run _menu_notify ;;
-    2) cmd_init ;;
+    2) _menu_run _menu_access ;;
+    3) cmd_init ;;
   esac
   exit 0
 }
@@ -62,15 +92,15 @@ cmd_menu() {
   while :; do
     if [ "$MODE" = prod ]; then
       labels=("Deploy / redeploy" "Status" "Logs" "Health check (doctor)" "Restart services"
-        "Open a shell" "Check the env file" "Notifications" "Stop the stack" "Quit")
+        "Open a shell" "Check the env file" "Notifications" "SSH access" "Stop the stack" "Quit")
       actions=(cmd_up cmd_ps cmd_logs doctor_run cmd_restart
-        cmd_shell "cmd_env check" _menu_notify cmd_down quit)
+        cmd_shell "cmd_env check" _menu_notify _menu_access cmd_down quit)
     else
       labels=("Start" "Stop" "Restart services" "Status" "Logs" "Open a shell"
-        "Health check (doctor)" "Check the env file" "Notifications"
+        "Health check (doctor)" "Check the env file" "Notifications" "Security keys"
         "Delete containers and data (clean)" "Quit")
       actions=(cmd_up cmd_down cmd_restart cmd_ps cmd_logs cmd_shell
-        doctor_run "cmd_env check" _menu_notify cmd_clean quit)
+        doctor_run "cmd_env check" _menu_notify _menu_access cmd_clean quit)
     fi
     ui_select "$(cfg PROJECT_NAME) · $MODE · $(_menu_health)" "${labels[@]}" || return 0
     [ "${actions[$UI_CHOICE]}" = quit ] && return 0

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+printf 'systemd-run %s\n' "$*" >>"$STUB_DIR/calls"
+[ -f "$STUB_DIR/systemd-run-fails" ] && exit 1
+touch "$STUB_DIR/rollback-armed"

@@ -11,6 +11,7 @@ server.
 - **Env file handled**: created from the example, secrets generated, never overwritten.
 - **Production guards**: refuses the example domain, waits for healthy services.
 - **Doctor**: Docker, RAM, disk, busy ports, missing memory limits, pending reboot, failed timers, SSH still open to passwords, alerts that reach nobody.
+- **Security keys**: set up your YubiKeys as SSH keys, install them on servers, and turn SSH passwords off with an automatic rollback.
 - **Notifications**: Telegram, Discord, ntfy, Slack, e-mail, WhatsApp, or any webhook. Several at once, each with its own minimum level.
 
 Bash only. Needs Docker with Compose v2, `curl` and `openssl`. Linux.
@@ -43,6 +44,8 @@ helpoupou           # opens the menu
 | `clean` | Delete containers and volumes, after confirmation |
 | `doctor` | Health report |
 | `notify setup` / `list` / `test` / `send` / `remove` | Notification channels |
+| `key setup` / `import` / `list` / `push` / `github` | Hardware security keys as SSH keys |
+| `ssh status` / `harden` / `confirm` / `unharden` | Keys-only SSH on a server, safely |
 | `mode [dev\|prod]` | Show or set what this machine is |
 | `init` | Create `helpoupou.conf` |
 
@@ -60,6 +63,7 @@ demo data belongs. helpoupou itself stays generic.
 ## Documentation
 
 - [docs/CONFIG.md](docs/CONFIG.md): every key of `helpoupou.conf`, and hooks
+- [docs/ACCESS.md](docs/ACCESS.md): security keys and SSH hardening
 - [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md): providers and their settings
 
 ## Tests

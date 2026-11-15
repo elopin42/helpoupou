@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Test double: pretends a security key answered.
+printf 'ssh-keygen %s\n' "$*" >>"$STUB_DIR/calls"
+[ -f "$STUB_DIR/keygen-fails" ] && exit 1
+file='' mode=''
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -f) file=$2 && shift ;;
+    -K) mode=download ;;
+    -lf)
+      echo "256 SHA256:fakefingerprint $(awk '{ print $3 }' "$2") (ED25519-SK)"
+      exit 0
+      ;;
+  esac
+  shift
+done
+if [ "$mode" = download ]; then
+  echo handle >id_ed25519_sk_rk_spare
+  echo 'sk-ssh-ed25519@openssh.com AAAAresidentspare spare' >id_ed25519_sk_rk_spare.pub
+elif [ -n "$file" ]; then
+  echo handle >"$file"
+  echo "sk-ssh-ed25519@openssh.com AAAA$(basename "$file") comment" >"$file.pub"
+fi
