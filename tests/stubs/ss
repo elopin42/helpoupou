@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+while IFS= read -r p; do
+  [ -n "$p" ] && echo "LISTEN 0 4096 0.0.0.0:$p 0.0.0.0:*"
+done <"$STUB_DIR/ports" 2>/dev/null
+exit 0

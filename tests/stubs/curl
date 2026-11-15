@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Test double: records argv and the --config stdin, never touches the network.
+printf '%s\n' "$*" >>"$STUB_DIR/curl.argv"
+cfg=$(cat)
+printf '%s\n---\n' "$cfg" >>"$STUB_DIR/curl.stdin"
+out='' hdr=''
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -o) out=$2 && shift ;;
+    -D) hdr=$2 && shift ;;
+  esac
+  shift
+done
+for opt in data-binary upload-file; do
+  p=$(sed -n "s/^$opt = \"@\{0,1\}\(.*\)\"\$/\1/p" <<<"$cfg")
+  if [ -n "$p" ] && [ -f "$p" ]; then
+    cat "$p" >>"$STUB_DIR/curl.payload"
+    echo >>"$STUB_DIR/curl.payload"
+  fi
+done
+code=200
+if [ -s "$STUB_DIR/curl.codes" ]; then
+  code=$(head -1 "$STUB_DIR/curl.codes")
+  sed -i 1d "$STUB_DIR/curl.codes"
+fi
+if [ -f "$STUB_DIR/curl.fail-match" ] && grep -qF "$(cat "$STUB_DIR/curl.fail-match")" <<<"$cfg"; then code=400; fi
+if [ -n "$hdr" ] && [ "$code" = 429 ]; then printf 'HTTP/1.1 429\r\nRetry-After: 1\r\n' >"$hdr"; fi
+if [ -n "$out" ]; then echo '{"stub":true}' >"$out"; fi
+printf '%s' "$code"

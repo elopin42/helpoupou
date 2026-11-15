@@ -1,0 +1,37 @@
+# helpoupou project config. This file is parsed, never executed.
+# Every key is documented in docs/CONFIG.md.
+
+PROJECT_NAME=myapp
+
+# Compose files per mode, space-separated.
+COMPOSE_DEV=compose.yml compose.dev.yml
+COMPOSE_PROD=compose.yml compose.prod.yml
+COMPOSE_DEV_PROFILES=
+COMPOSE_PROD_PROFILES=
+
+ENV_FILE=.env
+ENV_EXAMPLE=.env.example
+
+# Secrets generated when empty or still at their example value: KEY:length.
+# Add :db for a database password (never regenerated once DB_VOLUME exists).
+SECRETS=SECRET_KEY:64 POSTGRES_PASSWORD:32:db
+
+# Docker volume of the database: its absence means "first boot".
+DB_VOLUME=myapp_pgdata
+
+# Env variable holding the public hostname (prod refuses the example value).
+DOMAIN_KEY=SITE_HOST
+
+# KEY=value pairs forced into the env file in prod.
+PROD_ENV_OVERRIDES=DEBUG=0
+
+# Printed after a start.
+URLS_DEV=http://localhost:8000
+URLS_PROD=https://example.com
+
+SHELL_SERVICE=web
+LOG_SERVICE=
+
+# Optional doctor thresholds.
+RAM_MIN_MB=400
+DISK_WARN_PCT=85
