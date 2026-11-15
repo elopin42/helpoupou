@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+cat "$STUB_DIR/journal" 2>/dev/null
+exit 0

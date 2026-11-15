@@ -1,3 +1,8 @@
 #!/usr/bin/env bash
-case "$*" in *--failed*) cat "$STUB_DIR/failed-units" 2>/dev/null ;; esac
+printf 'systemctl %s\n' "$*" >>"$STUB_DIR/calls"
+case "$*" in
+  *--failed*) cat "$STUB_DIR/failed-units" 2>/dev/null ;;
+  *is-active*) [ -f "$STUB_DIR/rollback-armed" ] || exit 3 ;;
+  *"stop helpoupou-ssh-rollback.timer") rm -f "$STUB_DIR/rollback-armed" ;;
+esac
 exit 0

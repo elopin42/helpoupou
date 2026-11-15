@@ -266,6 +266,11 @@ check_ssh() {
   if [ -f "$file" ]; then keys=$(grep -cvE '^[[:space:]]*(#|$)' "$file" || true); fi
   if [ "$keys" -eq 0 ]; then
     dr warn "no SSH key in $file: this account can only be reached with a password"
+  elif [ "$keys" -eq 1 ]; then
+    dr warn "only one SSH key in $file: lose it and you are locked out (add a backup: helpoupou key push)"
+  fi
+  if _ssh_rollback_pending; then
+    dr warn "SSH hardening is not confirmed and will be undone: log in from a new terminal and run 'helpoupou ssh confirm'"
   fi
   out=$(PATH="$PATH:/usr/sbin:/sbin" sshd -T 2>/dev/null || sudo -n sshd -T 2>/dev/null || true)
   if [ -z "$out" ]; then
@@ -273,7 +278,7 @@ check_ssh() {
     return
   fi
   if grep -qi '^passwordauthentication yes' <<<"$out"; then
-    dr warn "SSH still accepts passwords: switch to keys only once a key login works"
+    dr warn "SSH still accepts passwords (once your keys are installed: helpoupou ssh harden)"
   else
     dr ok "SSH accepts keys only"
   fi

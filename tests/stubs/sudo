@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
-exit 1
+# Test double: refuses unless the test allows it, then just runs the command.
+[ -f "$STUB_DIR/sudo-ok" ] || exit 1
+[ "${1:-}" = -n ] && shift
+exec "$@"

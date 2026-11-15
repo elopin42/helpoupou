@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+[ -f "$STUB_DIR/no-key-plugged" ] || echo '/dev/hidraw0: vendor=0x1050, product=0x0407 (Example Key)'

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+if [ "$*" = "-Q key" ]; then
+  [ -f "$STUB_DIR/no-fido-ssh" ] || echo 'sk-ssh-ed25519@openssh.com'
+  echo ssh-ed25519
+  exit 0
+fi
+printf 'ssh %s\n' "$*" >>"$STUB_DIR/calls"
+case "$*" in
+  *PreferredAuthentications=publickey*) exit "$(cat "$STUB_DIR/ssh-key-login-rc" 2>/dev/null || echo 0)" ;;
+esac
+# "Remote" side of key push: keep what was sent, answer with a count.
+cat >>"$STUB_DIR/remote-authorized_keys"
+grep -c . "$STUB_DIR/remote-authorized_keys"

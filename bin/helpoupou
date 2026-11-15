@@ -19,7 +19,7 @@ PROJECT_DIR=''
 PROJECT_DIR_FLAG=''
 HELPOUPOU_YES=${HELPOUPOU_YES:-0}
 
-for _lib in ui machine config env compose doctor notify init menu; do
+for _lib in ui machine config env compose doctor notify keys sshd init menu; do
   # shellcheck source=/dev/null
   . "$HELPOUPOU_ROOT/lib/$_lib.sh"
 done
@@ -56,6 +56,16 @@ Machine commands:
   notify test [name] Send a test message
   notify send        Send a message: --level L --title T [--body B | --body -]
   notify remove NAME Delete a channel
+  key setup [name]   Create an SSH key on a security key (YubiKey...)
+  key import         Rebuild key handles on this machine from the device
+  key adopt FILE.pub Register a security key created elsewhere
+  key list           Show the registered security keys
+  key push USER@HOST Install your keys on a server
+  key github         Use your keys for GitHub (login, optional signing)
+  ssh status         Show how this server accepts SSH logins
+  ssh harden         Keys only, no passwords (with automatic rollback)
+  ssh confirm        Make the hardening permanent, from a NEW session
+  ssh unharden       Remove helpoupou's SSH settings
   mode [dev|prod]    Show or set what this machine is
   init               Create helpoupou.conf for the project in this directory
   version            Print the version
@@ -130,6 +140,8 @@ main() {
     mode) cmd_mode "$@" ;;
     init) cmd_init "$@" ;;
     menu) cmd_menu ;;
+    key) cmd_key "$@" ;;
+    ssh) cmd_ssh "$@" ;;
     doctor)
       project_load_optional
       mode_resolve
