@@ -222,7 +222,16 @@ notify_setup() {
     NCH["$name.$key"]=$val
   done 3< <("notify_${provider}_fields")
 
-  [ -n "$min" ] || ask min "Minimum level sent to this channel (info, warning, critical)" info
+  if [ -z "$min" ]; then
+    min=info
+    if [ "$HELPOUPOU_YES" != 1 ] &&
+      ui_select "What should this channel receive?" "Everything" "Warnings and critical alerts" "Critical alerts only"; then
+      case "$UI_CHOICE" in
+        1) min=warning ;;
+        2) min=critical ;;
+      esac
+    fi
+  fi
   _level_rank "$min" >/dev/null || die "invalid level '$min' (info, success, warning, critical)"
   NCH["$name.min_level"]=$min
 
@@ -256,7 +265,7 @@ notify_list() {
   local ch provider key label secret _rest val state
   notify_load
   if [ "${#NCH_NAMES[@]}" -eq 0 ]; then
-    note "no notification channel yet (add one with: helpoupou notify setup)"
+    note "no notification channel yet: add one from the menu (Notifications) or with: helpoupou notify setup"
     return 0
   fi
   for ch in "${NCH_NAMES[@]}"; do

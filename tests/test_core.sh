@@ -147,7 +147,7 @@ test_mode_unknown_without_terminal_fails_fast() {
 
 test_mode_is_asked_once_then_remembered() {
   unset HELPOUPOU_MODE
-  run_in 'prod\n' "$HP" doctor
+  run_in '2\n' "$HP" doctor
   assert_out "remembered as 'prod'"
   run "$HP" mode
   assert_out 'prod'

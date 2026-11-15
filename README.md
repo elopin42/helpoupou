@@ -6,7 +6,7 @@ Install it once per machine. Each project only carries a small `helpoupou.conf`.
 The same command does the right thing on a dev workstation and on a production
 server.
 
-- **Guided menu**: `helpoupou`, and pick. Every entry is also a subcommand.
+- **Full-screen menu**: type `helpoupou` and pick with the arrows. Setup, services, servers and keys are chosen from lists. Every entry also exists as a subcommand for scripts.
 - **Dev or prod, automatically**: asked once per machine, then remembered.
 - **Env file handled**: created from the example, secrets generated, never overwritten.
 - **Production guards**: refuses the example domain, waits for healthy services.

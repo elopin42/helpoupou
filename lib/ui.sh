@@ -77,7 +77,13 @@ ask_yn() {
   if [ "$__def" = y ]; then __label='Y/n'; else __label='y/N'; fi
   while :; do
     printf '  %s [%s]: ' "$__q" "$__label" >&2
-    IFS= read -r __in || __in=$__def
+    if [ -t 0 ]; then
+      # One key press, no Enter needed.
+      IFS= read -rsn1 __in || __in=$__def
+      printf '%s\n' "$__in" >&2
+    else
+      IFS= read -r __in || __in=$__def
+    fi
     case "${__in:-$__def}" in
       [Yy]*)
         printf -v "$__var" y

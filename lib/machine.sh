@@ -41,9 +41,13 @@ mode_resolve() {
     if ! have_tty && [ "$HELPOUPOU_YES" != 1 ]; then
       die "machine mode is not set and there is no terminal to ask. Run 'helpoupou mode dev' or 'helpoupou mode prod' once, or set HELPOUPOU_MODE."
     fi
-    note "First run on this machine: is it a dev workstation or a production server?"
-    ask m "Mode (dev/prod)" "$(mode_guess)"
-    mode_validate "$m"
+    m=$(mode_guess)
+    if [ "$HELPOUPOU_YES" != 1 ]; then
+      ui_select "First run on this machine. What is it? (my guess: $m)" \
+        "Dev workstation (my computer)" "Production server" ||
+        die "machine mode not chosen"
+      if [ "$UI_CHOICE" = 1 ]; then m=prod; else m=dev; fi
+    fi
     machine_set MODE "$m"
     ok "this machine is remembered as '$m' (change with: helpoupou mode dev|prod)"
   fi

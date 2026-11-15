@@ -169,7 +169,7 @@ test_send_without_channel_says_so() {
 }
 
 test_setup_saves_after_a_successful_test_and_masks_secrets() {
-  run_in 'alerts\nSECRET-TG-TOKEN-123\n4242\nwarning\n' "$HP" notify setup --provider telegram
+  run_in 'alerts\nSECRET-TG-TOKEN-123\n4242\n2\n' "$HP" notify setup --provider telegram
   assert_rc 0
   assert_out 'test message sent'
   local conf="$XDG_CONFIG_HOME/helpoupou/notify.conf"
@@ -186,7 +186,7 @@ test_setup_saves_after_a_successful_test_and_masks_secrets() {
 
 test_setup_does_not_save_when_the_test_fails() {
   echo BADTOKEN >"$STUB_DIR/curl.fail-match"
-  run_in 'alerts\nBADTOKEN\n4242\ninfo\nn\n' "$HP" notify setup --provider telegram
+  run_in 'alerts\nBADTOKEN\n4242\n1\nn\n' "$HP" notify setup --provider telegram
   assert_fails
   assert_out 'channel not saved'
   [ ! -f "$XDG_CONFIG_HOME/helpoupou/notify.conf" ] || _fail "channel was saved"
