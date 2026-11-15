@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+# helpoupou - one ops command for small Docker Compose projects.
+set -euo pipefail
+
+_self=${BASH_SOURCE[0]}
+while [ -L "$_self" ]; do
+  _dir=$(cd -P "$(dirname "$_self")" && pwd)
+  _self=$(readlink "$_self")
+  [[ "$_self" != /* ]] && _self="$_dir/$_self"
+done
+HELPOUPOU_ROOT=$(cd -P "$(dirname "$_self")/.." && pwd)
+export HELPOUPOU_ROOT
+unset _self _dir
+
+MODE=''
+MODE_FLAG=''
+FORCE=0
+PROJECT_DIR=''
+PROJECT_DIR_FLAG=''
+HELPOUPOU_YES=${HELPOUPOU_YES:-0}
+
+for _lib in ui machine config env compose doctor notify init menu; do
+  # shellcheck source=/dev/null
+  . "$HELPOUPOU_ROOT/lib/$_lib.sh"
+done
+for _lib in "$HELPOUPOU_ROOT"/lib/notify/*.sh; do
+  # shellcheck source=/dev/null
+  . "$_lib"
+done
+unset _lib
+
+usage() {
+  cat <<'EOF'
+helpoupou - one ops command for small Docker Compose projects
+
+Usage: helpoupou [options] [command]
+
+With no command, opens the menu.
+
+Project commands (run inside a project that has a helpoupou.conf):
+  up                 Check, prepare the env file, build and start the stack
+  down               Stop the stack (volumes are kept)
+  restart            Restart the running services
+  build              Build the images
+  ps                 Show the services
+  logs [service]     Follow the logs
+  shell [service]    Open a shell in a service
+  env                Create the env file and generate missing secrets
+  env check          List missing keys and secrets still at their example value
+  clean              Remove containers AND volumes (asks for confirmation)
+
+Machine commands:
+  doctor             Health report: docker, RAM, disk, ports, env, server hygiene
+  notify setup       Add a notification channel (wizard)
+  notify list        Show the configured channels (secrets masked)
+  notify test [name] Send a test message
+  notify send        Send a message: --level L --title T [--body B | --body -]
+  notify remove NAME Delete a channel
+  mode [dev|prod]    Show or set what this machine is
+  init               Create helpoupou.conf for the project in this directory
+  version            Print the version
+  self-update        Update helpoupou to the latest version
+
+Options:
+  --mode dev|prod    Override the machine mode for this run
+  --force            Start even if doctor reports a failure
+  -y, --yes          Accept defaults instead of asking
+  -C DIR             Run as if started in DIR
+EOF
+}
+
+cmd_version() {
+  local v sha
+  v=$(cat "$HELPOUPOU_ROOT/VERSION" 2>/dev/null || echo unknown)
+  sha=$(git -C "$HELPOUPOU_ROOT" rev-parse --short HEAD 2>/dev/null || true)
+  printf 'helpoupou %s%s\n' "$v" "${sha:+ ($sha)}"
+}
+
+cmd_self_update() {
+  git -C "$HELPOUPOU_ROOT" rev-parse --git-dir >/dev/null 2>&1 ||
+    die "$HELPOUPOU_ROOT is not a git checkout: reinstall with install.sh"
+  git -C "$HELPOUPOU_ROOT" pull --ff-only
+  cmd_version
+}
+
+main() {
+  local -a args=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --mode)
+        [ $# -ge 2 ] || die "--mode needs a value (dev or prod)"
+        MODE_FLAG=$2
+        shift 2
+        ;;
+      --mode=*)
+        MODE_FLAG=${1#*=}
+        shift
+        ;;
+      --force)
+        FORCE=1
+        shift
+        ;;
+      -y | --yes)
+        HELPOUPOU_YES=1
+        shift
+        ;;
+      -C)
+        [ $# -ge 2 ] || die "-C needs a directory"
+        PROJECT_DIR_FLAG=$2
+        shift 2
+        ;;
+      *)
+        args+=("$1")
+        shift
+        ;;
+    esac
+  done
+  set -- "${args[@]+"${args[@]}"}"
+  if [ -n "$PROJECT_DIR_FLAG" ]; then
+    cd "$PROJECT_DIR_FLAG" || die "cannot enter $PROJECT_DIR_FLAG"
+  fi
+
+  local cmd=${1:-menu}
+  [ $# -gt 0 ] && shift
+  tmp_init
+  case "$cmd" in
+    help | -h | --help) usage ;;
+    version | --version) cmd_version ;;
+    self-update) cmd_self_update ;;
+    mode) cmd_mode "$@" ;;
+    init) cmd_init "$@" ;;
+    menu) cmd_menu ;;
+    doctor)
+      project_load_optional
+      mode_resolve
+      doctor_run
+      ;;
+    notify)
+      project_load_optional
+      cmd_notify "$@"
+      ;;
+    up | down | restart | ps | logs | shell | build | clean | env)
+      project_require
+      mode_resolve
+      "cmd_${cmd}" "$@"
+      ;;
+    *) die "unknown command: $cmd (try 'helpoupou help')" ;;
+  esac
+}
+
+main "$@"

@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Test double: records the call, answers from files in $STUB_DIR.
+printf 'docker %s\n' "$*" >>"$STUB_DIR/calls"
+args=" $* "
+case "$args" in
+  *" volume inspect "*)
+    grep -qx "${!#}" "$STUB_DIR/volumes" 2>/dev/null
+    exit $?
+    ;;
+  " info "*)
+    [ -f "$STUB_DIR/docker-down" ] && exit 1
+    case "$args" in *DockerRootDir*) echo /var/lib/docker ;; esac
+    exit 0
+    ;;
+  " compose version "*) exit 0 ;;
+  " compose "*" config "*)
+    cat "$STUB_DIR/compose-config" 2>/dev/null
+    exit 0
+    ;;
+  " compose "*" ps -q "*)
+    cat "$STUB_DIR/own-ids" 2>/dev/null
+    exit 0
+    ;;
+  " compose "*" up "*) exit "$(cat "$STUB_DIR/up-rc" 2>/dev/null || echo 0)" ;;
+  " ps "*"publish="*)
+    cat "$STUB_DIR/port-holder" 2>/dev/null
+    exit 0
+    ;;
+  " stats "*)
+    printf '50.00%%\tbigcontainer\t2GiB / 4GiB\n'
+    exit 0
+    ;;
+  " system df "*)
+    echo "Images: 1GB (50%)"
+    exit 0
+    ;;
+esac
+exit 0

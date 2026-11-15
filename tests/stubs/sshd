@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+[ -f "$STUB_DIR/sshd" ] || exit 1
+cat "$STUB_DIR/sshd"

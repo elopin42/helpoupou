@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+case "$*" in
+  *--output=pcent*) printf 'Use%%\n %s%%\n' "$(cat "$STUB_DIR/disk-pct" 2>/dev/null || echo 50)" ;;
+  *--output=source*) printf 'Filesystem\n/dev/stub\n' ;;
+esac
